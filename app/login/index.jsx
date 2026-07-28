@@ -71,6 +71,7 @@ const Login = () => {
         const res = await result.json();
         if (res.msg === "LogIn successfull") {
           //token Set using Secure Store as Expo
+          console.log("RRRR", res);
           await SecureStore.setItemAsync("token", res.token);
           showSnackBar(res.msg, "success", setSnackBar);
           router.push({

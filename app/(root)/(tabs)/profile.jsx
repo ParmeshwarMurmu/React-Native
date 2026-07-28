@@ -1,28 +1,38 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import * as SecureStore from "expo-secure-store";
+import { useEffect, useState } from "react";
 import { Text, TouchableOpacity } from "react-native";
-// import { Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Profile = () => {
+  const [token, setToken] = useState("");
+
+  const getToken = async () => {
+    const userToken = await SecureStore.getItemAsync("token");
+    setToken(userToken);
+  };
+
+  const logout = async () => {
+    await SecureStore.deleteItemAsync("token");
+    setToken("");
+  };
+
+  useEffect(() => {
+    getToken();
+  }, []);
+
   return (
     <SafeAreaView style={{ padding: 20, marginTop: "100px" }}>
       <TouchableOpacity
-        // style={{
-        //   height: 50,
-        //   borderWidth: 2,
-        //   borderColor: "grey",
-        //   borderRadius: 5,
-        //   padding: 10,
-        //   alignItems: "center",
-        //   justifyContent: "center",
-        //   backgroundColor: "red",
-        //   marginTop: 20,
-        // }}
         onPress={() => {
-          router.push({
-            pathname: "/login",
-          });
+          if (token) {
+            logout();
+          } else {
+            router.push({
+              pathname: "/login",
+            });
+          }
         }}
       >
         <LinearGradient
@@ -41,7 +51,7 @@ const Profile = () => {
               fontSize: 25, // Increase the font size
             }}
           >
-            Login
+            {token ? "Logout" : "Login"}
           </Text>
         </LinearGradient>
       </TouchableOpacity>
