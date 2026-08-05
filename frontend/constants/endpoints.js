@@ -20,3 +20,4 @@ export const BOOTS = "https://e-cart-5jh7.onrender.com/shoes/male/boots";
 export const MEN_ALL_CATEGORY =
   "https://e-cart-5jh7.onrender.com/allProducts/men";
 export const REGISTER_USER = "https://e-cart-5jh7.onrender.com/user/register";
+export const GET_CART_DATA = "https://e-cart-5jh7.onrender.com/user/cart";

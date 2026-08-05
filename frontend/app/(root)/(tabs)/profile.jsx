@@ -48,7 +48,7 @@ const Profile = () => {
         >
           <Text
             style={{
-              fontSize: 25, // Increase the font size
+              fontSize: 25,
             }}
           >
             {token ? "Logout" : "Login"}
