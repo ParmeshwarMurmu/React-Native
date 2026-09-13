@@ -73,6 +73,7 @@ const Login = () => {
           //token Set using Secure Store as Expo
           console.log("RRRR", res);
           await SecureStore.setItemAsync("token", res.token);
+          await SecureStore.setItemAsync("userId", res.userId)
           showSnackBar(res.msg, "success", setSnackBar);
           router.push({
             pathname: "/All",

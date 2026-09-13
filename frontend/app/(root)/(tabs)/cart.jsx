@@ -7,10 +7,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { useEffect, useState } from "react";
+import axios from "axios";
 import {
   ActivityIndicator,
   Dimensions,
-  FlatList,
   Image,
   ScrollView,
   Text,
@@ -25,6 +25,7 @@ const screenHeight = Dimensions.get("window").height;
 
 const Cart = () => {
   const [token, setToken] = useState("");
+  const [userId, setUserId] = useState("");
   const [cartData, setCartData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [itemDetails, setItemDetails] = useState({
@@ -34,7 +35,9 @@ const Cart = () => {
 
   const getToken = async () => {
     const userToken = await SecureStore.getItemAsync("token");
+    const userId = await SecureStore.getItemAsync("userId");
     setToken(userToken);
+    setUserId(userId);
   };
 
   const getUserCartData = async () => {
@@ -105,11 +108,14 @@ const Cart = () => {
       //   return sum + price;
       // }, 0);
       // 1. Create order on backend
-      const response = await fetch("http://10.0.2.2:5000/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: itemDetails.totalPrice }),
-      });
+      const response = await fetch(
+        "https://react-native-q7uy.onrender.com/create-order",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount: itemDetails.totalPrice }),
+        }
+      );
       const order = await response.json();
       // 2. Open Razorpay checkout
       const options = {
@@ -130,8 +136,17 @@ const Cart = () => {
 
       // const RazorpayCheckout = require("react-native-razorpay").default;
       RazorpayCheckout.open(options)
-        .then((data) => {
+        .then(async(data) => {
+          const deleteCart = await axios.delete(
+            `https://e-cart-5jh7.onrender.com/user/cartItems/${userId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
           alert("Order has been Place Successfully");
+          getUserCartData();
         })
         .catch((error) => {
           console.log("Payment Error:", error);
@@ -188,106 +203,95 @@ const Cart = () => {
                     >
                       Items In You Cart
                     </Text>
-                    <FlatList
-                      data={cartData}
-                      keyExtractor={(item) => item._id}
-                      showsVerticalScrollIndicator={false}
-                      renderItem={({ item }) => (
-                        <View
-                          key={item._id}
-                          style={{
-                            marginBottom: 15,
-                          }}
-                        >
-                          <View style={{ flexDirection: "row" }}>
-                            <Image
-                              alt="Images"
-                              source={{
-                                uri:
-                                  item?.mensProduct?.images[0] ||
-                                  item?.womensProduct?.images[0] ||
-                                  item?.shoesProduct?.images[0],
-                              }}
-                              style={{
-                                width: 120,
-                                height: 120,
-                              }}
-                            />
-                            <View style={{ paddingLeft: 15 }}>
-                              <Text>
-                                {(
+                    {cartData.map((item) => (
+                      <View
+                        key={item._id}
+                        style={{
+                          marginBottom: 15,
+                        }}
+                      >
+                        <View style={{ flexDirection: "row" }}>
+                          <Image
+                            alt="Images"
+                            source={{
+                              uri:
+                                item?.mensProduct?.images[0] ||
+                                item?.womensProduct?.images[0] ||
+                                item?.shoesProduct?.images[0],
+                            }}
+                            style={{
+                              width: 120,
+                              height: 120,
+                            }}
+                          />
+                          <View style={{ paddingLeft: 15 }}>
+                            <Text>
+                              {(
+                                item?.mensProduct?.title ||
+                                item?.womensProduct?.title ||
+                                item?.shoesProduct?.title ||
+                                ""
+                              )
+                                .split(" ")
+                                .slice(0, 4)
+                                .join(" ") +
+                                ((
                                   item?.mensProduct?.title ||
                                   item?.womensProduct?.title ||
                                   item?.shoesProduct?.title ||
                                   ""
-                                )
-                                  .split(" ")
-                                  .slice(0, 4)
-                                  .join(" ") +
-                                  ((
-                                    item?.mensProduct?.title ||
-                                    item?.womensProduct?.title ||
-                                    item?.shoesProduct?.title ||
-                                    ""
-                                  ).split(" ").length > 10
-                                    ? "..."
-                                    : "")}
-                              </Text>
-                              <Text style={{ marginTop: 5 }}>
-                                Quantity : 1{" "}
-                              </Text>
+                                ).split(" ").length > 10
+                                  ? "..."
+                                  : "")}
+                            </Text>
+                            <Text style={{ marginTop: 5 }}>Quantity : 1 </Text>
 
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                marginTop: 5,
+                              }}
+                            >
+                              <Text style={{ marginRight: 5 }}>Price : </Text>
                               <View
                                 style={{
-                                  flexDirection: "row",
-                                  marginTop: 5,
-                                }}
-                              >
-                                <Text style={{ marginRight: 5 }}>Price : </Text>
-                                <View
-                                  style={{
-                                    flex: 1,
-                                    flexDirection: "row",
-                                  }}
-                                >
-                                  <FontAwesome
-                                    name="rupee"
-                                    size={18}
-                                    color="black"
-                                    style={{ marginRight: 5 }}
-                                  />
-                                  <Text>
-                                    {item?.mensProduct?.price ||
-                                      item?.womensProduct?.price ||
-                                      item?.shoesProduct?.price}
-                                  </Text>
-                                </View>
-                              </View>
-
-                              <View
-                                style={{
-                                  marginTop: 10,
                                   flex: 1,
                                   flexDirection: "row",
                                 }}
                               >
-                                <Ionicons
-                                  name="add-circle-sharp"
-                                  size={24}
-                                  color="green"
-                                  style={{ marginRight: 20 }}
+                                <FontAwesome
+                                  name="rupee"
+                                  size={18}
+                                  color="black"
+                                  style={{ marginRight: 5 }}
                                 />
-                                <AntDesign
-                                  name="delete"
-                                  size={24}
-                                  color="red"
-                                />
+                                <Text>
+                                  {item?.mensProduct?.price ||
+                                    item?.womensProduct?.price ||
+                                    item?.shoesProduct?.price}
+                                </Text>
                               </View>
+                            </View>
+
+                            <View
+                              style={{
+                                marginTop: 10,
+                                flex: 1,
+                                flexDirection: "row",
+                              }}
+                            >
+                              <Ionicons
+                                name="add-circle-sharp"
+                                size={24}
+                                color="green"
+                                style={{ marginRight: 20 }}
+                              />
+                              <AntDesign name="delete" size={24} color="red" />
                             </View>
                           </View>
                         </View>
-                      )}
-                    />
+                      </View>
+                    ))}
                     <View style={{ marginBottom: 10 }}>
                       <Text style={{ fontSize: 20 }}>Billing Details</Text>
                       <Text style={{ fontSize: 16 }}>
